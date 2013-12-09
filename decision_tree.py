@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import Tkinter
 import urllib2
-import BeautifulSoup
+from bs4 import BeautifulSoup
 import os
 import re
 
@@ -14,7 +14,7 @@ class simpleapp(Tkinter.Tk):
     def initialize(self):
         #Setting up the graphical user interface
         self.grid()
-        frame = Tkinter.Frame(self, borderwidth=5, relief="sunken", width=1024, height=400)
+        frame = Tkinter.Frame(self, borderwidth=5, relief="sunken", width=1200, height=700)
         frame.grid(column=0,row=0)
         frame.grid()
         frame.grid_propagate(0)
@@ -27,17 +27,20 @@ class simpleapp(Tkinter.Tk):
         self.labelvariable3=Tkinter.StringVar()
         self.labelvariable4=Tkinter.StringVar()
         self.labelvariable5=Tkinter.StringVar()
+        self.labelvariable6=Tkinter.StringVar()
         mycolor = '#%02x%02x%02x' % (238, 238, 238)
         self.label1 = Tkinter.Label(frame,textvariable=self.labelvariable1,anchor="w",fg="white",bg=mycolor)
-        self.label1.grid(column=0,row=1,sticky='W',padx=(20,0))
+        self.label1.grid(column=0,row=1,sticky='W',padx=(10,0))
         self.label2 = Tkinter.Label(frame,textvariable=self.labelvariable2,anchor="w",fg="white",bg=mycolor)
         self.label2.grid(column=0,row=1,padx=(70,0))
         self.label3 = Tkinter.Label(frame,textvariable=self.labelvariable3,anchor="w",fg="black",bg=mycolor)
-        self.label3.grid(column=0,row=0,sticky='W',padx=(10,0),pady=(20,0))
+        self.label3.grid(column=0,row=0,sticky='W',padx=(0,0),pady=(20,0))
         self.label4 = Tkinter.Label(frame,textvariable=self.labelvariable4,anchor="w",fg="white",bg=mycolor,wraplength=100,justify='left')
         self.label4.grid(column=0,row=1,sticky='W',padx=(570,0))
         self.label5 = Tkinter.Label(frame,textvariable=self.labelvariable5,anchor="w",fg="white",bg=mycolor,wraplength=100,justify='left')
         self.label5.grid(column=0,row=1,sticky='W',padx=(685,0))
+        self.label6 = Tkinter.Label(frame,textvariable=self.labelvariable6,anchor="w",fg="white",bg=mycolor,wraplength=100,justify='left')
+        self.label6.grid(column=0,row=1,sticky='W',padx=(800,0))
         self.labelvariable3.set("URL to analyse :")
 
 
@@ -59,7 +62,7 @@ class simpleapp(Tkinter.Tk):
             }
             req_site = urllib2.Request(url_input, txdata, txheaders)"""
             get = urllib2.urlopen(url_input).read()
-            dom = BeautifulSoup.BeautifulSoup(get)
+            dom = BeautifulSoup(get)
             #fetching all iframes in page
             iframe_data = dom.findAll('iframe')
             iframe_analysis = []
@@ -100,19 +103,28 @@ class simpleapp(Tkinter.Tk):
             escape_label="Escape characters status: \n"
             self.labelvariable5.set(escape_label)
             escape_count=0
+            space_label="White space status: \n"
+            self.labelvariable5.set(space_label)
+            space_count=0
+            char_count=0
             script_data = dom.findAll('script')
             for script in script_data:
                 for line in script:
+                    char_count = char_count + len(line)
+                    space_count = space_count + (len(line) - len(line.lstrip()))
                     if line.find("\\"):
                         if line.find("escape"):
                             escape_count = escape_count + 1
                             print line
+
+            space_percent = ( space_count / char_count ) * 100
 
             if((mal_frames >= 1) or (tot_object > 0) or (tot_embed >= 4)):
                 self.label2.configure(bg='red')
                 self.label1.configure(bg='blue')
                 self.label4.configure(bg='blue')
                 self.label5.configure(bg='black')
+                self.label6.configure(bg='white',fg='black')
                 lab_var1 = "Suspicious content found !\n"
                 lab_var1 = lab_var1+"\n\n Total of "+str(mal_frames)+" suspiciously \n"
                 lab_var1 = lab_var1+"small frames found !\n\n"
@@ -125,6 +137,11 @@ class simpleapp(Tkinter.Tk):
                 else:
                     escape_label = escape_label + "Couldn't find any escape functions\n"
                 self.labelvariable5.set(escape_label)
+                if space_percent > 30:
+                    space_label = space_label + "There are " + str(space_count) + " white spaces\nHeavily obfuscated\n"
+                else:
+                    space_label = space_label + "There are " + str(space_count) + " white spaces\nNo white space obfuscation found\n"
+                self.labelvariable6.set(space_label)
 
             else:
                 self.label2.configure(bg='green')
@@ -138,6 +155,11 @@ class simpleapp(Tkinter.Tk):
                 else:
                     escape_label = escape_label + "Couldn't find any escape functions\n"
                 self.labelvariable5.set(escape_label)
+                if space_percent > 30:
+                    space_label = space_label + "There are " + str(space_count) + " white spaces\nHeavily obfuscated\n"
+                else:
+                    space_label = space_label + "There are " + str(space_count) + " white spaces\nNo white space obfuscation found\n"
+                self.labelvariable6.set(space_label)
 
 
     def getContentType(self,pageUrl):
@@ -170,7 +192,7 @@ class simpleapp(Tkinter.Tk):
         if('html' in file_type):
             iframe_child_ans.append(iframe_size)
             child_get = urllib2.urlopen(new_url).read()
-            child_dom = BeautifulSoup.BeautifulSoup(child_get)
+            child_dom = BeautifulSoup(child_get)
             object_data = child_dom.findAll('object')
             embed_data = child_dom.findAll('embed')
             for i in object_data:
