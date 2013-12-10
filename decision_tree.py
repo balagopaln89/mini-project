@@ -239,9 +239,6 @@ class simpleapp(Tkinter.Tk):
         else:
             return "not_dynamic"
 
-    def analyze_javascript(self):
-        print 
-
 if __name__ == "__main__":
     app = simpleapp(None)
     app.title('Amrita - Malicious Advertisement Analyzer')
